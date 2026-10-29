@@ -1,0 +1,40 @@
+{
+ "tfidf_lr/safeguard_test": {
+  "f1": 0.9859594383775351,
+  "precision": 1.0,
+  "recall": 0.9723076923076923,
+  "fpr": 0.0,
+  "auc": 0.9993715220949264,
+  "n": 2060
+ },
+ "tfidf_lr/deepset_external": {
+  "f1": 0.15384615384615385,
+  "precision": 0.9565217391304348,
+  "recall": 0.08365019011406843,
+  "fpr": 0.002506265664160401,
+  "auc": 0.7242297759608145,
+  "n": 662
+ },
+ "microsoft/deberta-v3-small/safeguard_test": {
+  "f1": 0.9938271604938271,
+  "precision": 0.9969040247678018,
+  "recall": 0.9907692307692307,
+  "fpr": 0.0014184397163120568,
+  "auc": 0.9991271140207312,
+  "n": 2060
+ },
+ "microsoft/deberta-v3-small/deepset_external": {
+  "f1": 0.2948717948717949,
+  "precision": 0.9387755102040817,
+  "recall": 0.17490494296577946,
+  "fpr": 0.007518796992481203,
+  "auc": 0.728165470710998,
+  "n": 662
+ },
+ "meta": {
+  "model": "microsoft/deberta-v3-small",
+  "train_seconds": 115.58753848075867,
+  "epochs": 2,
+  "train_n": 8236
+ }
+}

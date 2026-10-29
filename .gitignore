@@ -1,0 +1,11 @@
+.env
+*.env
+models/
+data/*.parquet
+__pycache__/
+*.pyc
+.venv/
+results/server.log
+results/eval_main2.*
+results/eval_smoke.*
+bench/debug_one.py

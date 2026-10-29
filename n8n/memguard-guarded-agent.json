@@ -1,0 +1,46 @@
+{
+  "name": "MemGuard guarded send-email",
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "agent-task", "options": {} },
+      "id": "n1", "name": "Agent task webhook", "type": "n8n-nodes-base.webhook", "typeVersion": 2, "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST", "url": "http://localhost:8099/memory/write", "sendBody": true, "specifyBody": "json",
+        "jsonBody": "={{ { text: $json.body.memory_text, source: $json.body.source } }}", "options": {}
+      },
+      "id": "n2", "name": "MemGuard: write memory", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST", "url": "http://localhost:8099/action/authorize", "sendBody": true, "specifyBody": "json",
+        "jsonBody": "={{ { tool: 'send_email', params: $('Agent task webhook').item.json.body.params, param_sources: $('Agent task webhook').item.json.body.param_sources } }}", "options": {}
+      },
+      "id": "n3", "name": "MemGuard: authorize action", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [440, 0]
+    },
+    {
+      "parameters": {
+        "conditions": { "options": { "caseSensitive": true, "typeValidation": "strict" },
+          "conditions": [ { "leftValue": "={{ $json.verdict }}", "rightValue": "allow", "operator": { "type": "string", "operation": "equals" } } ],
+          "combinator": "and" }
+      },
+      "id": "n4", "name": "Allowed?", "type": "n8n-nodes-base.if", "typeVersion": 2.2, "position": [660, 0]
+    },
+    {
+      "parameters": { "fromEmail": "agent@acme.com", "toEmail": "={{ $('Agent task webhook').item.json.body.params.to }}", "subject": "Invoice", "emailFormat": "text", "text": "Please find the invoice attached." },
+      "id": "n5", "name": "Send email", "type": "n8n-nodes-base.emailSend", "typeVersion": 2.1, "position": [900, -80]
+    },
+    {
+      "parameters": { "amount": 1, "unit": "hours", "resume": "webhook" },
+      "id": "n6", "name": "Wait for human approval (hold)", "type": "n8n-nodes-base.wait", "typeVersion": 1.1, "position": [900, 100]
+    }
+  ],
+  "connections": {
+    "Agent task webhook": { "main": [[{ "node": "MemGuard: write memory", "type": "main", "index": 0 }]] },
+    "MemGuard: write memory": { "main": [[{ "node": "MemGuard: authorize action", "type": "main", "index": 0 }]] },
+    "MemGuard: authorize action": { "main": [[{ "node": "Allowed?", "type": "main", "index": 0 }]] },
+    "Allowed?": { "main": [[{ "node": "Send email", "type": "main", "index": 0 }], [{ "node": "Wait for human approval (hold)", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}
