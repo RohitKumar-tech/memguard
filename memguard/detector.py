@@ -55,10 +55,12 @@ class ModelDetector:
 class Detector:
     """Combines the model score and the rule score; flags if either is confident."""
 
-    def __init__(self, model: ModelDetector | None = None, threshold: float = 0.5):
-        self.model, self.rules, self.threshold = model, RuleDetector(), threshold
+    def __init__(self, model: ModelDetector | None = None, threshold: float = 0.5, use_rules: bool = True):
+        self.model, self.rules, self.threshold, self.use_rules = model, RuleDetector(), threshold, use_rules
 
     def score(self, texts: List[str]) -> List[float]:
+        if self.model is not None and not self.use_rules:
+            return self.model.score(texts)
         r = self.rules.score(texts)
         if self.model is None:
             return r

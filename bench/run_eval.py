@@ -79,12 +79,13 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--n', type=int, default=600); ap.add_argument('--seeds', type=int, default=3)
     ap.add_argument('--reviewer-acc', type=float, default=0.95)
-    ap.add_argument('--poison-source', default='fetch_doc'); ap.add_argument('--tag', default='main'); ap.add_argument('--configs', default='')
+    ap.add_argument('--poison-source', default='fetch_doc'); ap.add_argument('--detector', default=''); ap.add_argument('--no-rules', action='store_true'); ap.add_argument('--tag', default='main'); ap.add_argument('--configs', default='')
     a = ap.parse_args()
     embed = CachedEmbedder()
-    mpath = os.path.join(ROOT, 'models', 'detector')
-    model = ModelDetector(mpath) if os.path.exists(mpath) else None
-    det_full = CachedDetector(model, 0.5); det_rules = CachedDetector(None, 0.5)
+    mpath = a.detector or os.path.join(ROOT, 'models', 'detector')
+    model = ModelDetector(mpath) if (a.detector or os.path.exists(mpath)) else None
+    if a.detector: print('detector:', a.detector, model.model.config.id2label, flush=True)
+    det_full = CachedDetector(model, 0.5, use_rules=not a.no_rules); det_rules = CachedDetector(None, 0.5)
     names = [c for c in (a.configs.split(',') if a.configs else CONFIGS)]
     results, rows_all = {}, []
     for name in names:

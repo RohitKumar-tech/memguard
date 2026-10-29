@@ -65,6 +65,27 @@ What the numbers say:
 4. **Human cost is real**: about 0.35-0.46 approvals per clean episode, mostly benign external
    addresses mentioned by untrusted documents.
 
+### Comparison with an existing open-source detector
+
+To check the result is not an artefact of our own detector, the same episodes were re-run with
+`protectai/deberta-v3-base-prompt-injection-v2` (Apache-2.0, a widely used open model) in place of our
+fine-tuned DeBERTa, with no extra rules (`results/eval_protectai.json`).
+
+| Setup | ASR % | Benign completion % | Notes |
+|---|---|---|---|
+| ProtectAI detector as write-time filter | 46.5 ± 2.4 | 83.7 ± 4.0 | 3.9% of benign writes flagged |
+| ProtectAI detector as retrieval-time filter | 46.5 ± 2.4 | 83.7 ± 4.0 | |
+| **MemGuard gateway + ProtectAI detector** | **1.1 ± 0.7** | **99.0 ± 0.3** | 0.46 approvals per clean episode |
+
+Detector-only accuracy (`results/external_detector_*.json`): ProtectAI scores F1 0.898 on the
+safe-guard test split and F1 0.576 on deepset (recall 0.41), versus our model's 0.994 and 0.295. Its
+training data is not fully documented here, so the deepset figure may be optimistic if that set was
+in its training mix. Takeaway: a stronger off-the-shelf detector gives a better trade-off inside
+MemGuard than our own fine-tune, and the gateway cuts attack success from about 46% to about 1% over
+the same detector used as a plain filter. **No commercial product, and none of the published
+memory-poisoning defenses (CaMeL, APPA, etc.), was run head-to-head**; their code or access was not
+available to this project, so no claim is made against them.
+
 ### Stress test: poison through a trusted channel (a known failure)
 
 If the attacker's text is written under the trusted `user` source (a MINJA-style attack that works
@@ -94,7 +115,7 @@ problem.
 * The detector is trained on public prompt-injection data (safe-guard-prompt-injection, mostly
   synthetic) and generalises poorly to memory-style text.
 * The n8n workflow is a template validated as JSON but **not executed against a live n8n instance**.
-  The MCP server was imported and its tool registration checked, not tested with a full client.
+  The MCP server was exercised with a real MCP client over stdio (`tests/mcp_client_check.py`): all five tools called, poison quarantined, action held, rollback and audit chain verified.
 * The HTTP gateway was exercised end to end with a live local server (write, quarantine, hold, audit).
 
 ## Quick start
