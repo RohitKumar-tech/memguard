@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Research | MemGuard</title>
+<meta name="description" content="Background, related work, reproducibility and limitations of the MemGuard project.">
+<meta name="theme-color" content="#0b6b57">
+<meta property="og:title" content="Research | MemGuard">
+<meta property="og:description" content="Background, related work, reproducibility and limitations of the MemGuard project.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b6b57'/%3E%3Cpath d='M16 6l8 3v6c0 5.2-3.3 9.2-8 11-4.7-1.8-8-5.8-8-11V9z' fill='none' stroke='white' stroke-width='2' stroke-linejoin='round'/%3E%3Cpath d='M12.5 16l2.6 2.6 4.6-5' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site"><div class="wrap">
+  <a class="brand" href="index.html"><svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#0b6b57"/><path d="M16 6l8 3v6c0 5.2-3.3 9.2-8 11-4.7-1.8-8-5.8-8-11V9z" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><path d="M12.5 16l2.6 2.6 4.6-5" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>MemGuard</a>
+  <nav class="main" aria-label="Primary"><a href="index.html">Overview</a><a href="how-it-works.html">How it works</a><a href="results.html">Results</a><a href="simulation.html">Simulation</a><a href="research.html" aria-current="page">Research</a></nav>
+</div></header>
+<main id="main">
+
+<section><div class="wrap">
+  <div class="kicker">Research</div>
+  <h1 style="max-width:18ch">Background and reproducibility</h1>
+  <p class="lead">What this project builds on, how to reproduce the numbers, and what it does not claim.</p>
+
+  <h2 style="margin-top:48px">Abstract</h2>
+  <p>LLM agents built on MCP tools and n8n workflows keep notes, preferences and retrieved facts across sessions, which makes long-term memory an attack surface: one poisoned entry can steer every later session. Existing prompt-injection defenses act on inputs and do not cover entries that are already stored. MemGuard is a gateway that records the provenance of every memory write, quarantines instruction-like text from untrusted sources, holds high-impact actions that depend on untrusted memory, and keeps memory in a hash-chained, versioned log so a poisoned entry and everything derived from it can be rolled back and re-derived. On a synthetic benchmark of 1,800 episodes it reduces attack success from 83.1% to 1.0%, with provenance and the risk engine responsible for most of the effect. It offers no protection when poison arrives through a channel it trusts.</p>
+</div></section>
+
+<section class="soft"><div class="wrap">
+  <h2>Related work</h2>
+  <ul class="plain" style="max-width:78ch">
+    <li><strong>AgentPoison</strong> (Chen et al., NeurIPS 2024) and <strong>MINJA</strong> (Dong et al., 2025) show poisoned entries can be planted in an agent's memory or knowledge base, the latter through ordinary queries alone.</li>
+    <li><strong>CaMeL</strong> (Debenedetti et al., 2025) separates privileged and quarantined models and tracks data flow with capabilities. It targets in-session tool use rather than durable memory.</li>
+    <li><strong>Greshake et al.</strong> (AISec 2023) introduced indirect prompt injection against LLM-integrated applications.</li>
+    <li><strong>MPBench</strong> (ICML 2026) gives a taxonomy and benchmark for memory poisoning and reports that existing prompt-injection defenses miss it.</li>
+    <li><strong>APPA</strong> (arXiv:2607.24625) proposes recoverable information-flow control, and two 2026 surveys (arXiv:2604.16548, arXiv:2604.23338) call for storage-time provenance, versioning and retention policy.</li>
+  </ul>
+  <p>MemGuard's contribution is to combine provenance, a risk engine and dependency-aware rollback at the memory-write boundary, and to measure what each contributes, including where the combination fails.</p>
+</div></section>
+
+<section id="reproduce"><div class="wrap">
+  <h2>Reproduce the results</h2>
+  <p>Everything runs on a single laptop GPU. Training the detector takes about two minutes; the full evaluation takes a few minutes per configuration.</p>
+  <pre><code>pip install fastapi uvicorn numpy pandas pyarrow scikit-learn torch \
+            transformers sentence-transformers matplotlib pytest mcp
+
+python scripts/get_data.py             # public datasets from Hugging Face
+python train/train_detector.py         # fine-tune DeBERTa-v3-small
+python -m pytest -q tests              # 8 unit tests
+python bench/run_eval.py --n 600 --seeds 3 --tag main
+python bench/run_eval.py --n 600 --seeds 3 --tag trusted_channel --poison-source user
+python bench/make_plots.py</code></pre>
+  <h3>Data</h3>
+  <ul class="plain">
+    <li><code>deepset/prompt-injections</code> (Apache-2.0), 662 labelled prompts.</li>
+    <li><code>xTRam1/safe-guard-prompt-injection</code>, 10,296 labelled prompts, largely synthetic.</li>
+    <li>MemBench-Lite, generated by the project from fixed seeds. Poison text reuses real injection strings from the public data.</li>
+  </ul>
+  <p>Datasets are downloaded by the script and not redistributed. Check each dataset card for its licence before reuse.</p>
+</div></section>
+
+<section class="soft" id="limits"><div class="wrap">
+  <h2>What this does not claim</h2>
+  <ul class="plain" style="max-width:78ch">
+    <li>It does not show that any particular language model is safe or unsafe. The agent is scripted.</li>
+    <li>It does not compare against published benchmarks. The benchmark is synthetic and authored by the project.</li>
+    <li>It does not solve poisoning through trusted channels. The stress test shows 99% attack success there.</li>
+    <li>It does not evaluate real reviewers. Approval burden is reported in counts, not in human time.</li>
+    <li>The n8n workflow and the MCP server have not been exercised against live external clients.</li>
+  </ul>
+</div></section>
+
+</main>
+<footer class="site"><div class="wrap">
+  <div>MemGuard. Final-year major project, 2026. Rohit Kumar.</div>
+  <div><a href="results.html">Results</a> &middot; <a href="research.html#limits">Limitations</a> &middot; <a href="research.html#reproduce">Reproduce</a></div>
+</div></footer>
+
+</body>
+</html>

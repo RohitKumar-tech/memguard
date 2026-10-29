@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MemGuard</title>
+<meta name="description" content="MemGuard records where every AI agent memory came from, holds risky actions for review, and rolls back poisoned memory.">
+<meta name="theme-color" content="#0b6b57">
+<meta property="og:title" content="MemGuard">
+<meta property="og:description" content="MemGuard records where every AI agent memory came from, holds risky actions for review, and rolls back poisoned memory.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b6b57'/%3E%3Cpath d='M16 6l8 3v6c0 5.2-3.3 9.2-8 11-4.7-1.8-8-5.8-8-11V9z' fill='none' stroke='white' stroke-width='2' stroke-linejoin='round'/%3E%3Cpath d='M12.5 16l2.6 2.6 4.6-5' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site"><div class="wrap">
+  <a class="brand" href="index.html"><svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#0b6b57"/><path d="M16 6l8 3v6c0 5.2-3.3 9.2-8 11-4.7-1.8-8-5.8-8-11V9z" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><path d="M12.5 16l2.6 2.6 4.6-5" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>MemGuard</a>
+  <nav class="main" aria-label="Primary"><a href="index.html" aria-current="page">Overview</a><a href="how-it-works.html">How it works</a><a href="results.html">Results</a><a href="simulation.html">Simulation</a><a href="research.html">Research</a></nav>
+</div></header>
+<main id="main">
+
+<section class="hero"><div class="wrap">
+  <div class="kicker">Research project &middot; AI agent security</div>
+  <h1>Memory you can audit, and undo, for AI agents</h1>
+  <p class="lead">AI agents that use MCP tools and n8n workflows remember things between sessions. If an attacker gets one false entry into that memory, it can steer every later session. MemGuard records where each memory came from, holds risky actions for a human, and can roll a poisoned entry back together with everything derived from it.</p>
+  <div class="btns"><a class="btn primary" href="results.html">See the results</a><a class="btn" href="simulation.html">Run the simulation</a></div>
+</div></section>
+
+<section class="soft"><div class="wrap">
+  <div class="stats">
+    <div class="stat"><div class="num">83.1% <small>to</small> 1.0%</div><div class="lbl">Attack success rate, no defense versus full MemGuard, on the same 1,800 episodes.</div></div>
+    <div class="stat"><div class="num">9</div><div class="lbl">Defense configurations compared, including ablations that switch each layer off.</div></div>
+    <div class="stat warn"><div class="num">99%</div><div class="lbl">Attack success when the poison arrives through a channel MemGuard trusts. This is the main open problem.</div></div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="cols">
+    <div>
+      <h2>The problem</h2>
+      <p>Most prompt-injection defenses inspect what goes into the model. Memory poisoning happens earlier: a malicious sentence is saved once, looks like a normal preference or fact, and is retrieved and trusted in every later session.</p>
+      <p>Recent benchmark work reports that existing prompt-injection defenses do not cover this case, and that protection has to include storage-time provenance, versioning and retention policy, not only checks at retrieval or execution time.</p>
+    </div>
+    <div>
+      <h2>An example</h2>
+      <p>An agent summarizes a vendor email. Hidden text in the email says to always BCC an outside address on invoices. The agent saves that as a user preference. Two days later it sends an invoice, and the attacker gets a copy.</p>
+      <p>Nothing was wrong with the second request. The damage was done when the entry was stored.</p>
+      <p><a href="simulation.html">Step through this scenario</a> with and without MemGuard.</p>
+    </div>
+  </div>
+</div></section>
+
+<section class="soft"><div class="wrap">
+  <h2>What MemGuard does</h2>
+  <p class="lead" style="margin-bottom:32px">Four mechanisms, enforced in code at the point where the agent touches memory and tools, not in the prompt.</p>
+  <ol class="steps">
+    <li><h3>Provenance on every write</h3><p>Each memory is labelled with its source and a trust level: the user, a verified internal system, or untrusted tool output. A summary built from several memories takes the lowest trust of its inputs. Unknown sources are treated as untrusted.</p></li>
+    <li><h3>Write-time detection</h3><p>A fine-tuned DeBERTa-v3-small model and lexical rules flag instruction-like text from untrusted sources and quarantine it before the agent can read it.</p></li>
+    <li><h3>Risk-adaptive approval</h3><p>An action is held for a human when a high-impact parameter, such as an external CC address or a payee account, comes only from untrusted-origin memory. Values the user supplied, or that stay inside the organization, pass without friction.</p></li>
+    <li><h3>Versioning and rollback</h3><p>Memory is an append-only log chained with SHA-256. When a reviewer rejects an entry, MemGuard finds everything derived from it, rolls it back, and re-derives those memories from their clean sources.</p></li>
+  </ol>
+  <div class="btns"><a class="btn" href="how-it-works.html">How it works in detail</a></div>
+</div></section>
+
+<section><div class="wrap">
+  <h2>Where it sits</h2>
+  <figure>
+<svg class="diagram" viewBox="0 0 960 400" role="img" aria-label="Architecture: the agent talks to the MemGuard gateway, which labels and scans memory writes, stores them in a hash-chained log, and authorizes tool actions before they run.">
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="arrowhead"/></marker></defs>
+  <rect class="box" x="20" y="150" width="170" height="100" rx="10"/>
+  <text class="t" x="105" y="192" text-anchor="middle">Agent</text>
+  <text class="sub" x="105" y="214" text-anchor="middle">MCP client or</text>
+  <text class="sub" x="105" y="232" text-anchor="middle">n8n workflow</text>
+
+  <rect class="group" x="250" y="30" width="460" height="340" rx="14"/>
+  <text class="lbl" x="268" y="52">MEMGUARD GATEWAY</text>
+
+  <rect class="box accent" x="280" y="70" width="200" height="82" rx="8"/>
+  <text class="t" x="380" y="104" text-anchor="middle">1. Provenance label</text>
+  <text class="sub" x="380" y="126" text-anchor="middle">source + trust level</text>
+
+  <rect class="box accent" x="500" y="70" width="190" height="82" rx="8"/>
+  <text class="t" x="595" y="104" text-anchor="middle">2. Write-time detector</text>
+  <text class="sub" x="595" y="126" text-anchor="middle">quarantine instructions</text>
+
+  <rect class="box" x="280" y="180" width="410" height="70" rx="8"/>
+  <text class="t" x="485" y="210" text-anchor="middle">Memory store</text>
+  <text class="sub" x="485" y="232" text-anchor="middle">append-only log, SHA-256 hash chain, dependency graph</text>
+
+  <rect class="box accent" x="280" y="278" width="410" height="70" rx="8"/>
+  <text class="t" x="485" y="308" text-anchor="middle">3. Risk engine</text>
+  <text class="sub" x="485" y="330" text-anchor="middle">allow, hold for a human, or deny; reject triggers rollback</text>
+
+  <rect class="box" x="770" y="278" width="170" height="70" rx="10"/>
+  <text class="t" x="855" y="308" text-anchor="middle">Tools</text>
+  <text class="sub" x="855" y="330" text-anchor="middle">email, payments, sharing</text>
+
+  <path class="arrow" d="M190 190 L250 160" marker-end="url(#ah)"/>
+  <text class="lbl" x="192" y="150">memory writes</text>
+  <path class="arrow" d="M190 215 L250 290" marker-end="url(#ah)"/>
+  <text class="lbl" x="196" y="262">proposed action</text>
+  <path class="arrow" d="M480 111 L498 111" marker-end="url(#ah)"/>
+  <path class="arrow" d="M595 152 L595 178" marker-end="url(#ah)"/>
+  <path class="arrow" d="M485 250 L485 276" marker-end="url(#ah)"/>
+  <path class="arrow" d="M690 313 L768 313" marker-end="url(#ah)"/>
+  <text class="lbl" x="700" y="304">if allowed</text>
+</svg><figcaption>The gateway is the only path between the agent and its memory and tools. It is available as an HTTP service, an MCP server, and an n8n workflow template.</figcaption></figure>
+</div></section>
+
+<section class="soft"><div class="wrap">
+  <h2>What the evidence says</h2>
+  <div class="cols3">
+    <div><h3>Provenance does the work</h3><p>Provenance labels plus the risk engine cut attack success from 83.1% to 3.3% while completing 99.9% of benign tasks.</p></div>
+    <div><h3>The detector alone is weak</h3><p>It scored an F1 of 0.99 on its own test set but 0.30 on a different public dataset, and it flags about 10% of benign writes.</p></div>
+    <div><h3>Trusted channels are the gap</h3><p>If poison is written through a channel labelled trusted, MemGuard offers no protection. Scanning trusted writes halves the attack but blocks many legitimate tasks.</p></div>
+  </div>
+  <div class="btns"><a class="btn primary" href="results.html">Full results and limitations</a></div>
+</div></section>
+
+</main>
+<footer class="site"><div class="wrap">
+  <div>MemGuard. Final-year major project, 2026. Rohit Kumar.</div>
+  <div><a href="results.html">Results</a> &middot; <a href="research.html#limits">Limitations</a> &middot; <a href="research.html#reproduce">Reproduce</a></div>
+</div></footer>
+
+</body>
+</html>

@@ -18,6 +18,8 @@ steer every later session. MemGuard is a gateway that sits between an agent and 
   rejects an entry, MemGuard traces everything derived from it, rolls all of it back and re-derives
   the dependents from their clean parents.
 
+**Website:** https://demo-six-kappa-23.vercel.app (overview, how it works, results, interactive simulation, research notes). Source in `website/` (static HTML, no build step required; `build_site.py` regenerates the pages).
+
 Components: `memguard/` (store, provenance, detector, risk engine, gateway), a FastAPI server
 (`memguard/server.py`), an MCP server (`memguard/mcp_server.py`), an n8n workflow
 (`n8n/memguard-guarded-agent.json`), the benchmark and evaluation (`bench/`), and detector training

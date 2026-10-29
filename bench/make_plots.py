@@ -14,17 +14,17 @@ LABEL = {'no_defense': 'No defense', 'retrieval_filter': 'Retrieval-time\nfilter
 names = [n for n in LABEL if n in R]
 x = np.arange(len(names))
 
-fig, ax = plt.subplots(1, 2, figsize=(13, 4.6))
+fig, ax = plt.subplots(1, 2, figsize=(13, 5.4))
 w = 0.38
 for i, (key, lab, col) in enumerate([('asr', 'Session 2', '#d9534f'), ('asr_session3', 'Session 3 (repeat)', '#f0ad4e')]):
     v = [R[n][key][0] for n in names]; e = [R[n][key][1] for n in names]
     ax[0].bar(x + (i - .5) * w, v, w, yerr=e, label=lab, color=col, capsize=2)
-ax[0].set_xticks(x); ax[0].set_xticklabels([LABEL[n] for n in names], fontsize=7)
+ax[0].set_xticks(x); ax[0].set_xticklabels([LABEL[n] for n in names], fontsize=7, rotation=35, ha='right')
 ax[0].set_ylabel('Attack success rate'); ax[0].set_title('Attack success (lower is better)'); ax[0].legend()
 u = [R[n]['utility_clean'][0] for n in names]; h = [R[n]['holds_per_clean_episode'][0] for n in names]
 ax[1].bar(x - .5 * w, u, w, label='Benign task completion', color='#5cb85c')
 ax[1].bar(x + .5 * w, h, w, label='Human approvals per clean episode', color='#5bc0de')
-ax[1].set_xticks(x); ax[1].set_xticklabels([LABEL[n] for n in names], fontsize=7)
+ax[1].set_xticks(x); ax[1].set_xticklabels([LABEL[n] for n in names], fontsize=7, rotation=35, ha='right')
 ax[1].set_title('Cost of the defense (clean episodes)'); ax[1].legend()
 plt.tight_layout(); plt.savefig(os.path.join(ROOT, 'results', 'fig_main.png'), dpi=160)
 
